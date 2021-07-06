@@ -30,7 +30,7 @@ class TimeEvgrp(SimpleEventgroup):
 
 
 class Prot(SimpleService):
-    service_id = 0xB0A7
+    service_id = 0xa825
     version_major = 1
     version_minor = 0
 
@@ -68,10 +68,11 @@ class Prot(SimpleService):
             raise MalformedMessageError from exc
 
 
-async def run(local_addr, multicast_addr, port):
+async def run(iface, local_addr, multicast_addr, port):
 
     sd_trsp_u, sd_trsp_m, sd_prot = await ServiceDiscoveryProtocol.create_endpoints(
-        family=socket.AF_INET, local_addr=local_addr, multicast_addr=multicast_addr
+        family=socket.AF_INET, local_addr=local_addr, multicast_addr=multicast_addr,
+        multicast_interface=iface
     )
     sd_prot.timings.CYCLIC_OFFER_DELAY = 2
 
@@ -109,6 +110,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("local")
+    parser.add_argument("--iface", required=True)
     parser.add_argument("--multicast", required=True)
     parser.add_argument("--port", type=int, default=38510)
 
@@ -116,7 +118,7 @@ def main():
 
     try:
         asyncio.get_event_loop().run_until_complete(
-            run(args.local, args.multicast, args.port)
+            run(args.iface, args.local, args.multicast, args.port)
         )
     except KeyboardInterrupt:
         pass

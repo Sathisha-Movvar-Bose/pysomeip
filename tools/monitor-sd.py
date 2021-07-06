@@ -18,16 +18,16 @@ class Monitor(ClientServiceListener):
         LOG.info("offer STOPPED: %s", service)
 
 
-async def run(local_addr, multicast_addr, port, services):
+async def run(iface, local_addr, multicast_addr, port, services):
     trsp_u, trsp_m, protocol = await SDProto.create_endpoints(
         family=socket.AF_INET,
         local_addr=local_addr,
         multicast_addr=multicast_addr,
-        port=port,
+        port=port, multicast_interface=iface
     )
-
     monitor = Monitor()
 
+    breakpoint()
     if services:
         for sid in services:
             protocol.discovery.watch_service(someip.config.Service(sid), monitor)
@@ -66,16 +66,18 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser()
     parser.add_argument("local_addr")
-    parser.add_argument("multicast_addr")
-    parser.add_argument("port", type=int, default=30490)
+    parser.add_argument("--iface", required=True)
+    parser.add_argument("--multicast", required=True)
+    parser.add_argument("--port", type=int, default=30492)
     parser.add_argument("--service", type=auto_int, action="append")
 
     args = parser.parse_args()
-
+    #breakpoint()
     try:
         asyncio.get_event_loop().run_until_complete(
-            run(args.local_addr, args.multicast_addr, args.port, args.service)
+            run(args.iface, args.local_addr, args.multicast, args.port, args.service)
         )
     except KeyboardInterrupt:
         pass
